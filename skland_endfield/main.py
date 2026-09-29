@@ -98,7 +98,7 @@ def main() -> int:
         collector.log('未配置任何账号（SKLAND_TOKENS），跳过签到任务')
         return 1
 
-    max_retries = int(os.environ.get('SKLAND_MAX_RETRIES', DEFAULT_MAX_RETRIES))
+    max_retries = int(os.environ.get('SKLAND_MAX_RETRIES') or DEFAULT_MAX_RETRIES)
     anonymous = bool(os.environ.get('SKLAND_ANONYMOUS'))
     stats: dict[int, list[int]] = {}
     failed_indexes: list[int] = []

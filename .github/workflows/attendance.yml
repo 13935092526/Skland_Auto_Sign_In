@@ -17,15 +17,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 安装 Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
       - name: 恢复设备指纹缓存
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .cache
           key: skland-did
