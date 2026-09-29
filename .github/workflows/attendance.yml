@@ -1,0 +1,56 @@
+name: attendance
+
+on:
+  schedule:
+    # 每天 16:00 UTC（北京时间 00:00 后）执行签到
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      force_tokens:
+        description: '临时指定凭据（可选，多个用逗号分隔，留空则用 Secrets）'
+        required: false
+        default: ''
+  workflow_call:
+
+jobs:
+  attendance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 恢复设备指纹缓存
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: skland-did
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 执行签到
+        env:
+          SKLAND_TOKENS: ${{ github.event.inputs.force_tokens || secrets.SKLAND_TOKENS }}
+          SKLAND_NOTIFICATION_URLS: ${{ secrets.SKLAND_NOTIFICATION_URLS }}
+          SKLAND_MAX_RETRIES: ${{ secrets.SKLAND_MAX_RETRIES }}
+          SKLAND_ANONYMOUS: ${{ secrets.SKLAND_ANONYMOUS }}
+          SKLAND_DID_FILE: ${{ github.workspace }}/.cache/did.txt
+        run: |
+          # 签到失败不使 workflow 报错（原版行为），仅输出警告
+          # 设备指纹从 cache 恢复、自动写回 SKLAND_DID_FILE
+          if python -m skland_endfield; then
+            echo "attendance_status=success" >> "$GITHUB_ENV"
+          else
+            echo "attendance_status=failed" >> "$GITHUB_ENV"
+            echo "::warning ::签到存在失败项"
+          fi
+          mkdir -p .cache
+
+      - name: 结果提示
+        if: env.attendance_status == 'failed'
+        run: echo "本次签到存在失败，可手动重跑（每天仅首次签到有效）"
