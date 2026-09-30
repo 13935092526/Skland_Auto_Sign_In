@@ -6,6 +6,7 @@
     SKLAND_MAX_RETRIES       单角色签到失败最大重试次数（可选，默认 3）
     SKLAND_ANONYMOUS         设置任意值以隐藏角色名（可选）
     SKLAND_DID_FILE          设备指纹缓存文件（可选，由 workflow cache 跨运行保留）
+    WX_WEBHOOK               企业微信群机器人 webhook（可选），配置后推送签到日历图片
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from .attendance import attend_character, build_endfield_character_list
 from .client import SklandClient
 from .constants import DEFAULT_MAX_RETRIES
 from .notify import MessageCollector
+from .report import build_account, send_report
 
 
 def get_split_by_comma(value: str | None) -> list[str]:
@@ -52,8 +54,12 @@ def process_account(
     max_retries: int,
     total_accounts: int,
     anonymous: bool,
+    cards: list[dict] | None = None,
 ) -> bool:
-    """处理单个账号，返回是否出现失败。stats: gameId -> [总数, 成功, 已签到, 失败]"""
+    """处理单个账号，返回是否出现失败。stats: gameId -> [总数, 成功, 已签到, 失败]
+
+    cards 不为 None 时，顺带收集各角色的签到状态（转成图片报告数据）。
+    """
     collector.notify(f'\n--- 账号 {account_number}/{total_accounts} ---')
     collector.info('开始处理...')
 
@@ -79,6 +85,16 @@ def process_account(
             anonymous=anonymous,
         )
 
+        if cards is not None:
+            account = build_account(
+                character.role,
+                result.status,
+                anonymous,
+                fallback_name=f'{character.channel_name}角色',
+            )
+            if account:
+                cards.append(account)
+
         if result.has_error:
             collector.info_error(result.message)
             game_stats[3] += 1
@@ -102,6 +118,7 @@ def main() -> int:
     anonymous = bool(os.environ.get('SKLAND_ANONYMOUS'))
     stats: dict[int, list[int]] = {}
     failed_indexes: list[int] = []
+    cards: list[dict] = []
 
     # 所有账号复用同一设备指纹；首次使用自动注册并写入缓存文件
     client = SklandClient(load_did())
@@ -112,7 +129,7 @@ def main() -> int:
     for index, token in enumerate(tokens):
         account_number = index + 1
         try:
-            if process_account(token, account_number, client, collector, stats, max_retries, len(tokens), anonymous):
+            if process_account(token, account_number, client, collector, stats, max_retries, len(tokens), anonymous, cards):
                 failed_indexes.append(account_number)
         except Exception as error:
             collector.notify(f'\n--- 账号 {account_number}/{len(tokens)} ---')
@@ -131,6 +148,12 @@ def main() -> int:
     print('\n'.join(summary))
 
     collector.push()
+
+    # 图片报告：把各角色当月签到状态渲染成日历卡片推送到企业微信群（WX_WEBHOOK）。
+    # 未配置或渲染/推送失败都只打日志，不影响上面的文字通知与签到退出码。
+    failure_note = f'本次签到有 {len(failed_indexes)} 个账号失败，详见日志' if failed_indexes else ''
+    send_report(cards, text=failure_note)
+
     return 1 if failed_indexes else 0
 
 

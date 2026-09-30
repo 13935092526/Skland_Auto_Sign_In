@@ -30,6 +30,12 @@ jobs:
           path: .cache
           key: skland-did
 
+      - name: 安装中文字体
+        # t2i 渲染签到日历图片需要中文字体；递归探测系统字体目录
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk fonts-wqy-zenhei
+
       - name: 安装依赖
         run: pip install -r requirements.txt
 
@@ -40,6 +46,8 @@ jobs:
           SKLAND_MAX_RETRIES: ${{ secrets.SKLAND_MAX_RETRIES }}
           SKLAND_ANONYMOUS: ${{ secrets.SKLAND_ANONYMOUS }}
           SKLAND_DID_FILE: ${{ github.workspace }}/.cache/did.txt
+          WX_WEBHOOK: ${{ secrets.WX_WEBHOOK }}
+          PYTHONIOENCODING: utf-8
         run: |
           # 签到失败不使 workflow 报错（原版行为），仅输出警告
           # 设备指纹从 cache 恢复、自动写回 SKLAND_DID_FILE

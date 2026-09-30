@@ -1,0 +1,14 @@
+{
+  "deadline": "2026-10-01T18:00:00",
+  "games": [
+    { "name": "饥荒", "weekly_done": 4, "weekly_total": 8 },
+    { "name": "缺氧", "weekly_done": 0, "weekly_total": 6 }
+  ],
+  "gifts": [
+    { "item": "Smelter's Boots", "game": "饥荒", "kind": "每周", "time": "10:32" },
+    { "item": "Knee Pants", "game": "饥荒", "kind": "每周", "time": "10:32" },
+    { "item": "Long Gloves", "game": "饥荒", "kind": "每周", "time": "10:31" },
+    { "item": "Ankle Boots", "game": "饥荒", "kind": "每周", "time": "10:31" },
+    { "item": "Verdant Beard", "game": "饥荒", "kind": "每日", "time": "08:05" }
+  ]
+}
