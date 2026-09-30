@@ -2,6 +2,8 @@
 
 [AEtherside/skland-daily-attendance](https://github.com/AEtherside/skland-daily-attendance)部分重写
 
+每周日 03:00 UTC进行保活提交
+
 
 ## 部署步骤
 
@@ -42,6 +44,7 @@ t2i/                      # 展示层：数据 → 图片 → 推送
 ├─ notify.py                                       # 推送通道（企业微信 text+image，Server酱文字）
 └─ templates/endfield_checkin.py                   # 签到日历卡片模板
 .github/workflows/attendance.yml                   # 每日定时：安装中文字体后执行 python run.py
+.github/workflows/keepalive.yml                    # 每周空 commit 保活，防止 schedule 被 60 天无活动停用
 ```
 
 本地运行：

@@ -1,0 +1,23 @@
+name: keepalive
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'   # 每周日 03:00 UTC（北京时间 11:00）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+
+      - name: 提交并推送空 commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit --allow-empty -m 'chore: keepalive（刷新仓库活动，防止 schedule 被 60 天无活动停用）'
+          git push origin "HEAD:${{ github.ref_name }}"
