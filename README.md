@@ -2,7 +2,7 @@
 
 [AEtherside/skland-daily-attendance](https://github.com/AEtherside/skland-daily-attendance)部分重写
 
-每周日 03:00 UTC进行保活提交
+每月15日进行保活提交
 
 
 ## 部署步骤
