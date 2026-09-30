@@ -1,0 +1,18 @@
+{
+  "accounts": [
+    {
+      "phone": "139 3509 2526",
+      "total_cur": 19.12,
+      "checkin_cur": 9.12,
+      "today_gain": "+20.00 MB",
+      "streak_done": 6
+    },
+    {
+      "phone": "138 0000 0000",
+      "total_cur": 15.60,
+      "checkin_cur": 5.60,
+      "today_gain": "+30.00 MB",
+      "streak_done": 3
+    }
+  ]
+}
