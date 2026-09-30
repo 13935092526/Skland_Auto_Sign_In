@@ -21,6 +21,8 @@
 3. 进入 **Actions** 标签页
 
 之后每天 16:00 UTC（北京时间 00:00 后）自动签到；也可在 Actions 页面手动 `Run workflow`。
+日志与摘要显示在 Actions 运行汇总页；正常只推送图片，**签到失败时额外推送文字告警**（含原因分析，
+若是 `SKLAND_TOKENS` 失效会明确提示重新获取凭据的步骤）。
 
 ### 获取凭据
 
@@ -36,6 +38,7 @@
 run.py                    # 入口：签到取数 → 出图 → 推送（--preview 只出图不推送）
 skland_endfield/          # 数据层：只负责签到与获取数据，不依赖 t2i
 ├─ client.py  crypto.py  device.py  constants.py   # 登录/签名/设备指纹
+├─ errors.py              # 失败原因分类（凭据失效/登录态/网络等）+ 处理建议
 ├─ attendance.py          # 终末地签到执行（含重试），返回原始状态数据
 └─ main.py                # 多账号编排 collect()，输出结构化 RunResult
 t2i/                      # 展示层：数据 → 图片 → 推送

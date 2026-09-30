@@ -1,20 +1,5 @@
 # -*- coding: utf-8 -*-
 """推送通道：企业微信群机器人（text / image）+ Server酱（markdown）。
-
-除 python-dotenv 外仅用标准库 urllib，作为接口被任意项目调用：
-  from t2i import push
-  push([Path("a.png")], title="签到报告", text="今日已签到")
-
-密钥解析顺序（适配"作为 utils 库被不同项目引入"）：
-  1. 调用 push 时显式传入 webhook= / sendkey=
-  2. 环境变量（import 时由 python-dotenv 自动从项目 .env 载入）：
-       企业微信 webhook  -> WX_WEBHOOK（兼容 WECOM_WEBHOOK）
-       Server酱 SendKey  -> SERVERCHAN_KEY
-不要把密钥硬编码或提交进仓库（.env 应加入 .gitignore）。
-
-注意：企业微信机器人只支持 text 与 image 两种 msgtype（不支持 markdown）；
-Server酱 的 desp 支持 markdown，但图片需要公网 URL，本地图片无法内嵌，
-因此 Server酱 只收文字摘要，图片由企业微信通道送达。缺哪个密钥就跳过哪个通道。
 """
 from __future__ import annotations
 

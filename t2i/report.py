@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from .notify import push
+from .notify import push, send_wecom_text
 from .registry import render_template
 
 # 森空岛/终末地按东八区结算，签到状态里的 currentTs 为秒级时间戳
@@ -136,6 +136,15 @@ def push_report(png: Path | None, webhook: str | None = None) -> bool:
     ok = push([png], webhook=url, wecom_only=True)
     print(f"[t2i] 图片推送{'成功' if ok else '未全部成功（详见上方通道日志）'}")
     return ok
+
+
+def push_alert(text: str, webhook: str | None = None) -> bool:
+    """签到失败时推送文字告警（唯一会推文字的场景，正常结果仍只发图片）。"""
+    url = resolve_webhook(webhook)
+    if not url:
+        print("[t2i] 未配置推送地址，跳过失败告警推送（详见日志/Actions 汇总）")
+        return False
+    return send_wecom_text(text, url)
 
 
 def send_report(accounts: list[dict[str, Any]], webhook: str | None = None,

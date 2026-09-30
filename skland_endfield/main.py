@@ -19,6 +19,7 @@ from typing import Any
 from .attendance import attend_character, build_endfield_character_list
 from .client import SklandClient
 from .constants import DEFAULT_MAX_RETRIES
+from .errors import FailureInfo, classify_error
 
 
 # ---------- 采集结果（交给 t2i 的原始数据） ----------
@@ -31,6 +32,8 @@ class SigninRecord:
     message: str
     success: bool
     has_error: bool
+    # 失败原因分类（仅账号级失败或角色级异常时有值），供告警使用
+    failure: FailureInfo | None = None
 
 
 @dataclass
@@ -113,6 +116,7 @@ def process_account(
             message=outcome.message,
             success=outcome.success,
             has_error=outcome.has_error,
+            failure=outcome.failure,
         ))
 
         if outcome.has_error:
@@ -154,7 +158,19 @@ def collect() -> RunResult:
                 result.failed_accounts.append(account_number)
         except Exception as error:
             print(f'\n--- 账号 {account_number}/{len(tokens)} ---')
-            print(f'[错误] 处理失败: {error}')
+            failure = classify_error(error)
+            print(f'[错误] 处理失败（{failure.label}）: {error}')
+            if failure.hint:
+                print(f'[提示] {failure.hint}')
+            # 账号级失败也记入 records，让告警推送能携带原因
+            result.records.append(SigninRecord(
+                role=None,
+                status=None,
+                message=f'账号 {account_number} 处理失败: {error} {failure.detail}'.strip(),
+                success=False,
+                has_error=True,
+                failure=failure,
+            ))
             result.failed_accounts.append(account_number)
 
     # 执行摘要

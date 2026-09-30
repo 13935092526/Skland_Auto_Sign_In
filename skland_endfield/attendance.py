@@ -17,6 +17,7 @@ from typing import Any, Callable
 
 from .client import SklandClient
 from .constants import DEFAULT_MAX_RETRIES, ENDFIELD_APP_CODE, ENDFIELD_GAME_ID, RETRY_DELAY_SECONDS
+from .errors import FailureInfo, classify_error
 
 
 # ---------- 角色名格式化（utils/format.ts） ----------
@@ -54,6 +55,8 @@ class AttendanceResult:
     # 服务端签到状态原文（含 hasToday / calendar / resourceInfoMap），供图片报告使用；
     # 签到过程异常时拿不到，为 None
     status: dict[str, Any] | None = None
+    # 失败原因分类（仅 has_error 时有值），供告警推送与 Actions 汇总使用
+    failure: FailureInfo | None = None
 
 
 # ---------- 角色模型 ----------
@@ -216,4 +219,5 @@ def attend_character(
             success=False,
             message=f'{character_label} 签到过程中出现未知错误: {error}',
             has_error=True,
+            failure=classify_error(error),
         )
