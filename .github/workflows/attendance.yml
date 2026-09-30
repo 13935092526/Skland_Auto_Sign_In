@@ -5,11 +5,6 @@ on:
     # 每天 16:00 UTC（北京时间 00:00 后）执行签到
     - cron: '0 2 * * *'
   workflow_dispatch:
-    inputs:
-      force_tokens:
-        description: '临时指定凭据（可选，多个用逗号分隔，留空则用 Secrets）'
-        required: false
-        default: ''
   workflow_call:
 
 jobs:
