@@ -5,6 +5,8 @@
 - utils/attendance/shared.ts 签到状态判断、奖励文案
 - utils/attendance/handlers/endfield.ts  终末地签到流程
 - utils/attendance/index.ts + utils/retry.ts  重试封装
+
+签到结果 AttendanceResult 额外携带服务端原始状态 status，供 report.py 渲染图片报告。
 """
 
 from __future__ import annotations
@@ -49,6 +51,9 @@ class AttendanceResult:
     success: bool
     message: str
     has_error: bool
+    # 服务端签到状态原文（含 hasToday / calendar / resourceInfoMap），供图片报告使用；
+    # 签到过程异常时拿不到，为 None
+    status: dict[str, Any] | None = None
 
 
 # ---------- 角色模型 ----------
@@ -119,6 +124,19 @@ def validate_character(character: EndfieldCharacter) -> tuple[bool, str | None]:
 
 # ---------- 签到主流程（endfield.ts handler） ----------
 
+def _refresh_status(client: SklandClient, query: dict[str, Any], fallback: dict[str, Any] | None) -> dict[str, Any] | None:
+    """签到后重新拉取状态，让图片报告里"今天"这一格显示为已签。
+
+    刷新失败不影响签到结果，退回签到前的数据。
+    """
+    try:
+        latest = client.get_endfield_attendance_status(**query)
+    except Exception as error:
+        print(f'签到后刷新签到状态失败，沿用签到前数据: {error}')
+        return fallback
+    return latest if isinstance(latest, dict) else fallback
+
+
 def endfield_attendance_handler(
     client: SklandClient,
     character: EndfieldCharacter,
@@ -138,6 +156,7 @@ def endfield_attendance_handler(
             success=False,
             message=f'{character_label} 今天已经签到过了',
             has_error=False,
+            status=attendance_status,
         )
 
     data = client.endfield_attendance(**query)
@@ -147,6 +166,7 @@ def endfield_attendance_handler(
         success=True,
         message=f'{character_label} 签到成功，获得了{awards}',
         has_error=False,
+        status=_refresh_status(client, query, attendance_status),
     )
 
 

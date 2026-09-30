@@ -11,3 +11,6 @@ __pycache__/
 .cache/
 data/
 .env
+
+# 本地探测脚本
+probe_skland.py
