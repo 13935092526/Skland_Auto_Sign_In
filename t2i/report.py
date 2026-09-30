@@ -5,7 +5,7 @@ skland_endfield 只负责签到并把服务端原始状态交出来，本模块�
 
     accounts = [build_account(record.role, record.status) for record in result.records]
     png      = render_report(accounts)          # t2i 模板出图
-    push_report(png, text_summary)              # 企业微信群机器人 text + image
+    push_report(png)                            # 企业微信群机器人只发 image，文字日志走 Actions 汇总
 
 send_report() 是「数据 → 图片 → 推送」的一站式入口，run.py 直接调用。
 推送密钥解析顺序（见 t2i/notify.py）：显式 webhook 参数 > 环境变量 WX_WEBHOOK
@@ -27,7 +27,6 @@ from .registry import render_template
 # 森空岛/终末地按东八区结算，签到状态里的 currentTs 为秒级时间戳
 CN_TZ = timezone(timedelta(hours=8))
 TEMPLATE_NAME = "endfield_checkin"
-REPORT_TITLE = "终末地 · 每日签到报告"
 
 
 def _award_label(award_id: str, resource_info: dict[str, dict[str, Any]]) -> str:
@@ -126,20 +125,20 @@ def render_report(accounts: list[dict[str, Any]], output: str | Path | None = No
     return png
 
 
-def push_report(png: Path | None, text: str = "", webhook: str | None = None) -> bool:
-    """把文字摘要 + 图片推送到企业微信群机器人；未解析到 webhook 时跳过。"""
+def push_report(png: Path | None, webhook: str | None = None) -> bool:
+    """只把图片推送到企业微信群机器人（不推文字，日志留给 Actions 汇总）；未解析到 webhook 时跳过。"""
     url = resolve_webhook(webhook)
     if not url:
         print("[t2i] 未配置推送地址（WX_WEBHOOK / SKLAND_NOTIFICATION_URLS），跳过推送")
         return False
     if png is None:
         return False
-    ok = push([png], title=REPORT_TITLE, text=text, webhook=url, wecom_only=True)
+    ok = push([png], webhook=url, wecom_only=True)
     print(f"[t2i] 图片推送{'成功' if ok else '未全部成功（详见上方通道日志）'}")
     return ok
 
 
-def send_report(accounts: list[dict[str, Any]], text: str = "", webhook: str | None = None,
+def send_report(accounts: list[dict[str, Any]], webhook: str | None = None,
                 output: str | Path | None = None) -> bool:
-    """数据 → 图片 → 推送的一站式入口。"""
-    return push_report(render_report(accounts, output=output), text=text, webhook=webhook)
+    """数据 → 图片 → 推送的一站式入口（仅推送图片）。"""
+    return push_report(render_report(accounts, output=output), webhook=webhook)

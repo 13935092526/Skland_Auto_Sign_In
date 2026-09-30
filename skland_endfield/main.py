@@ -42,10 +42,6 @@ class RunResult:
     anonymous: bool = False
 
     @property
-    def summary_text(self) -> str:
-        return '\n'.join(self.summary_lines)
-
-    @property
     def exit_code(self) -> int:
         return 1 if self.failed_accounts else 0
 
